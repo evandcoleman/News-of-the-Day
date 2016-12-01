@@ -9,8 +9,7 @@ import ReactiveSwift
 import Then
 import UIKit
 
-class ArticleCell: UITableViewCell {
-    static let reuseIdentifier = "ArticleCell"
+class ArticleCell: UITableViewCell, Reusable {
     
     let viewModel = MutableProperty<ArticleViewModel?>(nil)
     

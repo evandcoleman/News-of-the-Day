@@ -9,8 +9,7 @@ import ReactiveSwift
 import Then
 import UIKit
 
-class SourceCell: UICollectionViewCell {
-    static let reuseIdentifier = "SourceCell"
+class SourceCell: UICollectionViewCell, Reusable {
     
     private static let vMargin = 12.s
     private static let hMargin = 12.s

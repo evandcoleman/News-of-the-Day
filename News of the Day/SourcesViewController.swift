@@ -13,14 +13,17 @@ import Then
 import UIKit
 
 class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardCollectionViewLayoutDelegate {
-    
     private let layout: HFCardCollectionViewLayout
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
     
     init(viewModel: SourcesViewModel) {
         self.layout = HFCardCollectionViewLayout().then {
-            $0.spaceAtTopForBackgroundView = 100
+            $0.spaceAtTopForBackgroundView = 64
         }
-        
+    
         super.init(viewModel: viewModel, layout: self.layout)
     }
     
@@ -33,16 +36,12 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
         
         // MARK: Configure Subviews
         
+        let backgroundView = BackgroundView()
+        
         self.collectionView?.do {
             $0.register(SourceCell.self, forCellWithReuseIdentifier: SourceCell.reuseIdentifier)
-            $0.register(HeaderCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: HeaderCell.resuseIdentifier)
+            $0.backgroundView = backgroundView
         }
-
-        // MARK: Add Subviews
-        
-        
-        // MARK: Layout
-        
         
         // MARK: Logic/Bindings
         
@@ -51,6 +50,15 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
             .startWithValues { [weak self] _ in
                 self?.collectionView?.reloadData()
             }
+        
+        let topSpace = self.layout.spaceAtTopForBackgroundView
+        
+        self.reactive.trigger(for: #selector(SourcesViewController.scrollViewDidScroll(_:)))
+            .map { [weak self] _ in self?.collectionView?.cellForItem(at: IndexPath(item: 0, section: 0)) }
+            .skipNil()
+            .map { $0.superview?.convert($0.frame, to: backgroundView).minY ?? 0 }
+            .map { abs($0 - topSpace) }
+            .observeValues { backgroundView.headerOffsetY = $0 }
         
         self.viewModel.openSource.values
             .observeValues { [weak self] idx in
@@ -79,30 +87,22 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
         self.viewModel.openSource.apply(indexPath.row).start()
     }
     
-//    func cardCollectionViewLayout(_ collectionViewLayout: HFCardCollectionViewLayout, willRevealCardAtIndex index: Int) {
-//        if let cell = self.collectionView?.cellForItem(at: IndexPath(item: index, section: 0)) as? SourceCell {
-//            
-//        }
-//    }
-    
     // MARK: UICollectionViewDataSource
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return self.viewModel.sources.value.count
     }
     
-    override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        guard let cell = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionElementKindSectionHeader, withReuseIdentifier: HeaderCell.resuseIdentifier, for: indexPath) as? HeaderCell else { fatalError() }
-        
-        return cell
-    }
-    
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SourceCell.reuseIdentifier, for: indexPath) as? SourceCell else { fatalError() }
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SourceCell.reuseIdentifier, for: indexPath) as! SourceCell
         
         cell.viewModel.value = self.viewModel.sources.value[indexPath.item]
         cell.headHeight = self.layout.cardHeadHeight
         
         return cell
     }
+    
+    // MARK: UIScrollViewDelegate
+    
+    override func scrollViewDidScroll(_ scrollView: UIScrollView) { }
 }
