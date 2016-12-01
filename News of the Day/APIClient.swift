@@ -45,7 +45,7 @@ class APIClient {
             }
     }
     
-    func readArticles(sourceID: String, sortOrder: SortOrder? = nil) -> SignalProducer<[Article], NSError> {
+    func readArticles(sourceID: String, sortOrder: SortOrder = .default) -> SignalProducer<ArticlesResponse, NSError> {
         return self.session
             .request(Router.articles(sourceID: sourceID, sortOrder: sortOrder))
             .reactive
@@ -60,7 +60,7 @@ class APIClient {
                     return .failure(NSError.generic(message))
                 }
                 
-                return .success(articlesResponse.articles ?? [])
+                return .success(articlesResponse)
             }
     }
 }

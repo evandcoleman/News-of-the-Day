@@ -42,6 +42,12 @@ class SourceCell: UICollectionViewCell, Reusable {
             $0.contentMode = .scaleAspectFit
         }
         
+        let sortControl = UISegmentedControl().then {
+            $0.tintColor = .white
+        }
+        
+        let refreshControl = UIRefreshControl()
+        
         let tableView = UITableView().then {
             $0.register(ArticleCell.self, forCellReuseIdentifier: ArticleCell.reuseIdentifier)
             $0.delegate = self
@@ -56,7 +62,10 @@ class SourceCell: UICollectionViewCell, Reusable {
         
         self.contentView.addSubview(imageView)
         self.contentView.addSubview(nameLabel)
+        self.contentView.addSubview(sortControl)
         self.contentView.addSubview(tableView)
+        tableView.addSubview(refreshControl)
+        tableView.sendSubview(toBack: refreshControl)
         
         // MARK: Layout
         
@@ -74,7 +83,10 @@ class SourceCell: UICollectionViewCell, Reusable {
         let imageViewBottomConstraint = imageView.m_bottom |=| self.contentView.m_top + (self.headHeight.value - vMargin)
         let imageViewHeightConstraint = imageView.m_height |=| max(self.headHeight.value - (vMargin * 2), 0)
         
-        tableView.m_top |=| imageView.m_bottom + vInterMargin
+        sortControl.m_top |=| imageView.m_bottom + vInterMargin
+        sortControl |=| self.contentView.m_centerX
+        
+        tableView.m_top |=| sortControl.m_bottom + vInterMargin
         tableView |=| self.contentView.m_sides ~ (hMargin, hMargin)
         tableView |=| self.contentView.m_bottom - vMargin
         
@@ -83,12 +95,55 @@ class SourceCell: UICollectionViewCell, Reusable {
         self.reactive.backgroundColor <~ self.viewModel.map { $0?.backgroundColor }
         nameLabel.reactive.text <~ self.viewModel.map { $0?.name }
         nameLabel.reactive.textColor <~ self.viewModel.map { $0?.textColor ?? .black }
+        sortControl.reactive.isHidden <~ self.viewModel.map { !($0?.showsSortOrders ?? false) }
+        
+        sortControl.reactive
+            .selectedSegmentIndexes
+            .observeValues { [weak self] idx in
+                let order = self?.viewModel.value?.sortOrders[idx] ?? .top
+                self?.viewModel.value?.sortOrder.value = order
+            }
+        
+        refreshControl.reactive
+            .trigger(for: .valueChanged)
+            .observeValues { [weak self] _ in
+                self?.viewModel.value?.refreshArticles.apply().start()
+            }
+        
+        self.viewModel.producer
+            .skipNil()
+            .flatMap(.latest) { $0.isRevealed.producer }
+            .startWithValues { isRevealed in
+                sortControl.isHidden = !isRevealed
+                tableView.isHidden = !isRevealed
+            }
+        
+        self.viewModel.producer
+            .skipNil()
+            .flatMap(.latest) { $0.isLoading }
+            .startWithValues { loading in
+                if loading {
+                    refreshControl.beginRefreshing()
+                } else {
+                    refreshControl.endRefreshing()
+                }
+            }
         
         self.viewModel
             .map { $0?.logoURL }
             .producer
             .startWithValues { imageURL in
                 imageView.kf.setImage(with: imageURL)
+            }
+        
+        self.viewModel
+            .map { ($0?.sortOrder.value ?? .top, $0?.sortOrders ?? []) }
+            .producer
+            .startWithValues { sortOrder, sortOrders in
+                sortControl.removeAllSegments()
+                sortOrders.enumerated()
+                    .forEach { sortControl.insertSegment(withTitle: $1.name(), at: $0, animated: false) }
+                sortControl.selectedSegmentIndex = sortOrders.index(of: sortOrder) ?? 0
             }
         
         self.headHeight.producer

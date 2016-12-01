@@ -8,7 +8,7 @@ import Foundation
 
 enum Router: URLRequestConvertible {
     case sources(category: Category?, language: String?, country: String?)
-    case articles(sourceID: String, sortOrder: SortOrder?)
+    case articles(sourceID: String, sortOrder: SortOrder)
     
     static let baseURLString = "https://newsapi.org/v1/"
     
@@ -33,8 +33,8 @@ enum Router: URLRequestConvertible {
             case let .articles(sourceID, sortOrder):
                 var params: [String: Any] = [:]
                 params[ArticlesResponse.Field.sourceID.rawValue] = sourceID
-                if let s = sortOrder?.rawValue {
-                    params[ArticlesResponse.Field.sortOrder.rawValue] = s
+                if sortOrder != .default {
+                    params[ArticlesResponse.Field.sortOrder.rawValue] = sortOrder.rawValue
                 }
                 
                 return ("/articles", params)

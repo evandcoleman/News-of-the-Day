@@ -16,9 +16,17 @@ class SourceViewModel: ViewModel {
     let logoURL: URL?
     let backgroundColor: UIColor
     let textColor: UIColor
+    let sortOrders: [SortOrder]
+    var showsSortOrders: Bool {
+        return self.sortOrders.count > 1
+    }
     
     let articles = MutableProperty<[ArticleViewModel]>([])
     let isRevealed = MutableProperty<Bool>(false)
+    let sortOrder = MutableProperty<SortOrder>(.default)
+    var isLoading: SignalProducer<Bool, NoError> {
+        return self.loadArticles.isExecuting.producer
+    }
     
     // MARK: Public Actions
     
@@ -26,12 +34,12 @@ class SourceViewModel: ViewModel {
         return Action { [weak self] _ in
             guard let `self` = self else { return .empty }
             
-            return self.loadArticles.apply()
+            return self.loadArticles.apply(self.sortOrder.value)
                 .ignoreError()
                 .map { _ in () }
         }
     }()
-    
+        
     let openArticle: Action<URL, URL, NoError>
     
     // MARK: Private Properties
@@ -40,12 +48,12 @@ class SourceViewModel: ViewModel {
     
     // MARK: Private Actions
     
-    lazy var loadArticles: Action<(), [Article], NSError> = {
-        return Action { [weak self] _ in
+    lazy var loadArticles: Action<SortOrder, ArticlesResponse, NSError> = {
+        return Action { [weak self] sort in
             guard let `self` = self else { return .empty }
             guard let sourceID = self.source.id else { return .empty }
             
-            return self.apiClient.readArticles(sourceID: sourceID)
+            return self.apiClient.readArticles(sourceID: sourceID, sortOrder: sort)
         }
     }()
     
@@ -61,11 +69,20 @@ class SourceViewModel: ViewModel {
         self.logoURL = source.logoURL
         self.backgroundColor = backgroundColor
         self.textColor = backgroundColor.contrastingTextColor
+        self.sortOrders = source.availableSortOrders ?? []
         
         super.init()
         
         self.articles <~
             self.loadArticles.values
-                .map { $0.flatMap { ArticleViewModel($0, backgroundColor: backgroundColor) } }
+                .map { $0.articles?.flatMap { ArticleViewModel($0, backgroundColor: backgroundColor) } ?? [] }
+        self.sortOrder <~
+            self.loadArticles.values
+                .map { $0.sortOrder ?? .top }
+        
+        self.sortOrder.producer
+            .startWithValues { [weak self] sortOrder in
+                self?.loadArticles.apply(sortOrder).start()
+            }
     }
 }
