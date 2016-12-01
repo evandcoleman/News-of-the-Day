@@ -21,7 +21,7 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
     
     init(viewModel: SourcesViewModel) {
         self.layout = HFCardCollectionViewLayout().then {
-            $0.spaceAtTopForBackgroundView = 64
+            $0.spaceAtTopForBackgroundView = 44
         }
     
         super.init(viewModel: viewModel, layout: self.layout)
@@ -50,15 +50,6 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
             .startWithValues { [weak self] _ in
                 self?.collectionView?.reloadData()
             }
-        
-        let topSpace = self.layout.spaceAtTopForBackgroundView
-        
-        self.reactive.trigger(for: #selector(SourcesViewController.scrollViewDidScroll(_:)))
-            .map { [weak self] _ in self?.collectionView?.cellForItem(at: IndexPath(item: 0, section: 0)) }
-            .skipNil()
-            .map { $0.superview?.convert($0.frame, to: backgroundView).minY ?? 0 }
-            .map { abs($0 - topSpace) }
-            .observeValues { backgroundView.headerOffsetY = $0 }
         
         self.viewModel.openSource.values
             .observeValues { [weak self] idx in
@@ -101,8 +92,4 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
         
         return cell
     }
-    
-    // MARK: UIScrollViewDelegate
-    
-    override func scrollViewDidScroll(_ scrollView: UIScrollView) { }
 }

@@ -10,18 +10,6 @@ import UIKit
 
 class BackgroundView: UIView {
     
-    var headerOffsetY: CGFloat {
-        get { return self.topConstraint?.constant ?? 0 }
-        set {
-            self.topConstraint?.constant = newValue
-            
-            self.setNeedsLayout()
-            self.layoutIfNeeded()            
-        }
-    }
-    
-    private var topConstraint: NSLayoutConstraint?
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -56,9 +44,7 @@ class BackgroundView: UIView {
         
         container |=| self.m_edges ~ (UIApplication.shared.statusBarFrame.height + vMargin, 0, 0, 0)
         
-        self.topConstraint = (textContainer |=| container.m_top).layoutConstraints.first
-        textContainer |=| container.m_sides
-        textContainer |=| container.m_bottom
+        textContainer |=| container
         
         iconLabel |=| textContainer.m_top
         iconLabel |=| textContainer.m_leading + hMargin
