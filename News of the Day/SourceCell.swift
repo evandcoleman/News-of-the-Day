@@ -6,28 +6,14 @@
 import Mortar
 import ReactiveCocoa
 import ReactiveSwift
+import enum Result.NoError
 import Then
 import UIKit
 
 class SourceCell: UICollectionViewCell, Reusable {
     
-    private static let vMargin = 12.s
-    private static let hMargin = 12.s
-    
     let viewModel = MutableProperty<SourceViewModel?>(nil)
-    
-    var headHeight: CGFloat = 0 {
-        didSet {
-            if self.headHeight < SourceCell.vMargin {
-                self.headHeight = SourceCell.vMargin
-                return
-            }
-            self.tableViewTopConstraint?.layoutConstraints
-                .forEach { $0.constant = self.headHeight + SourceCell.vMargin }
-        }
-    }
-    
-    private var tableViewTopConstraint: MortarConstraint?
+    let headHeight = MutableProperty<CGFloat>(0)
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -68,18 +54,35 @@ class SourceCell: UICollectionViewCell, Reusable {
         
         // MARK: Layout
         
-        nameLabel |=| self.contentView.m_top + SourceCell.vMargin
-        nameLabel |=| self.contentView.m_sides ~ (SourceCell.hMargin, SourceCell.hMargin)
+        let vMargin = 12.s
+        let hMargin = 12.s
+        let vInterMargin = 12.s
         
-        self.tableViewTopConstraint = tableView |=| self.contentView.m_top + self.headHeight
-        tableView |=| self.contentView.m_sides ~ (SourceCell.hMargin, SourceCell.hMargin)
-        tableView |=| self.contentView.m_bottom - SourceCell.vMargin
+        nameLabel |=| self.contentView.m_top + vMargin
+        nameLabel |=| self.contentView.m_sides ~ (hMargin, hMargin)
+        
+        let tableViewTopConstraint = tableView |=| self.contentView.m_top + self.headHeight.value
+        tableView |=| self.contentView.m_sides ~ (hMargin, hMargin)
+        tableView |=| self.contentView.m_bottom - vMargin
         
         // MARK: Bindings
         
         self.reactive.backgroundColor <~ self.viewModel.map { $0?.backgroundColor }
         nameLabel.reactive.text <~ self.viewModel.map { $0?.name }
         nameLabel.reactive.textColor <~ self.viewModel.map { $0?.textColor ?? .black }
+        
+        self.viewModel.producer
+            .skipNil()
+            .flatMap(.latest) { [weak self] viewModel -> SignalProducer<(Bool, CGFloat), NoError> in
+                guard let `self` = self else { return .empty }
+                
+                return SignalProducer.combineLatest(viewModel.isRevealed.producer, self.headHeight.producer)
+            }
+            .startWithValues { isRevealed, headHeight in
+                let height = headHeight < vMargin || isRevealed ? nameLabel.frame.maxY + vInterMargin : headHeight + vMargin
+                tableViewTopConstraint.layoutConstraints
+                    .forEach { $0.constant = height }
+            }
         
         self.viewModel.producer
             .skipNil()

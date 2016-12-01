@@ -17,6 +17,7 @@ class SourceViewModel: ViewModel {
     let textColor: UIColor
     
     let articles = MutableProperty<[ArticleViewModel]>([])
+    let isRevealed = MutableProperty<Bool>(false)
     
     // MARK: Public Actions
     

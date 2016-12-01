@@ -78,6 +78,18 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
         self.viewModel.openSource.apply(indexPath.row).start()
     }
     
+    func cardCollectionViewLayout(_ collectionViewLayout: HFCardCollectionViewLayout, willRevealCardAtIndex index: Int) {
+        let viewModel = self.viewModel.sources.value[index]
+        
+        viewModel.isRevealed.value = true
+    }
+    
+    func cardCollectionViewLayout(_ collectionViewLayout: HFCardCollectionViewLayout, willUnrevealCardAtIndex index: Int) {
+        let viewModel = self.viewModel.sources.value[index]
+        
+        viewModel.isRevealed.value = false
+    }
+    
     // MARK: UICollectionViewDataSource
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -88,7 +100,7 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SourceCell.reuseIdentifier, for: indexPath) as! SourceCell
         
         cell.viewModel.value = self.viewModel.sources.value[indexPath.item]
-        cell.headHeight = self.layout.cardHeadHeight
+        cell.headHeight.value = self.layout.cardHeadHeight
         
         return cell
     }
