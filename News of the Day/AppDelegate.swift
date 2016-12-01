@@ -3,6 +3,7 @@
 //  Copyright © 2016 Evan Coleman. All rights reserved.
 //
 
+import Then
 import UIKit
 
 @UIApplicationMain
@@ -15,7 +16,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let sourcesViewController = SourcesViewController(viewModel: sourcesViewModel)
         
         self.window = UIWindow(frame: UIScreen.main.bounds)
-        self.window?.rootViewController = sourcesViewController
+        self.window?.rootViewController = UINavigationController(rootViewController: sourcesViewController).then {
+            $0.isNavigationBarHidden = true
+        }
         self.window?.makeKeyAndVisible()
         
         return true
