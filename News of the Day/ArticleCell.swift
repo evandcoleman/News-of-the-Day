@@ -98,6 +98,7 @@ class ArticleCell: UITableViewCell, Reusable {
         summaryLabel |=| self.contentView.m_leading + hMargin
         summaryLabel.m_trailing |=| imageView.m_leading - hMargin
         summaryLabel |=| self.contentView.m_bottom - vMarginBottom
+        summaryLabel.m_bottom |>| imageView.m_bottom
         
         separatorView |=| self.contentView.m_sides ~ (hMargin, hMargin)
         separatorView |=| self.contentView.m_bottom

@@ -3,6 +3,7 @@
 //  Copyright © 2016 Evan Coleman. All rights reserved.
 //
 
+import Kingfisher
 import Mortar
 import ReactiveCocoa
 import ReactiveSwift
@@ -37,6 +38,10 @@ class SourceCell: UICollectionViewCell, Reusable {
             $0.font = UIFont.boldSystemFont(ofSize: 17)
         }
         
+        let imageView = UIImageView().then {
+            $0.contentMode = .scaleAspectFit
+        }
+        
         let tableView = UITableView().then {
             $0.register(ArticleCell.self, forCellReuseIdentifier: ArticleCell.reuseIdentifier)
             $0.delegate = self
@@ -49,6 +54,7 @@ class SourceCell: UICollectionViewCell, Reusable {
 
         // MARK: Add Subviews
         
+        self.contentView.addSubview(imageView)
         self.contentView.addSubview(nameLabel)
         self.contentView.addSubview(tableView)
         
@@ -57,11 +63,18 @@ class SourceCell: UICollectionViewCell, Reusable {
         let vMargin = 12.s
         let hMargin = 12.s
         let vInterMargin = 12.s
+        let hInterMargin = 8.s
         
         nameLabel |=| self.contentView.m_top + vMargin
-        nameLabel |=| self.contentView.m_sides ~ (hMargin, hMargin)
+        nameLabel |=| self.contentView.m_leading + hMargin
+        nameLabel |=| self.contentView.m_width * 0.75
         
-        let tableViewTopConstraint = tableView |=| self.contentView.m_top + self.headHeight.value
+        imageView.m_leading |=| nameLabel.m_trailing + hInterMargin ! .required
+        imageView |=| self.contentView.m_trailing - hMargin ! .required
+        let imageViewBottomConstraint = imageView.m_bottom |=| self.contentView.m_top + (self.headHeight.value - vMargin)
+        let imageViewHeightConstraint = imageView.m_height |=| max(self.headHeight.value - (vMargin * 2), 0)
+        
+        tableView.m_top |=| imageView.m_bottom + vInterMargin
         tableView |=| self.contentView.m_sides ~ (hMargin, hMargin)
         tableView |=| self.contentView.m_bottom - vMargin
         
@@ -71,17 +84,19 @@ class SourceCell: UICollectionViewCell, Reusable {
         nameLabel.reactive.text <~ self.viewModel.map { $0?.name }
         nameLabel.reactive.textColor <~ self.viewModel.map { $0?.textColor ?? .black }
         
-        self.viewModel.producer
-            .skipNil()
-            .flatMap(.latest) { [weak self] viewModel -> SignalProducer<(Bool, CGFloat), NoError> in
-                guard let `self` = self else { return .empty }
-                
-                return SignalProducer.combineLatest(viewModel.isRevealed.producer, self.headHeight.producer)
+        self.viewModel
+            .map { $0?.logoURL }
+            .producer
+            .startWithValues { imageURL in
+                imageView.kf.setImage(with: imageURL)
             }
-            .startWithValues { isRevealed, headHeight in
-                let height = headHeight < vMargin || isRevealed ? nameLabel.frame.maxY + vInterMargin : headHeight + vMargin
-                tableViewTopConstraint.layoutConstraints
-                    .forEach { $0.constant = height }
+        
+        self.headHeight.producer
+            .startWithValues { headHeight in
+                imageViewBottomConstraint.layoutConstraints
+                    .forEach { $0.constant = headHeight - vMargin }
+                imageViewHeightConstraint.layoutConstraints
+                    .forEach { $0.constant = max(headHeight - (vMargin * 2), 0) }
             }
         
         self.viewModel.producer

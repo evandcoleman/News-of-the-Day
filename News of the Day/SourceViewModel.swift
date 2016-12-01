@@ -13,6 +13,7 @@ class SourceViewModel: ViewModel {
     let source: Source
     
     let name: String
+    let logoURL: URL?
     let backgroundColor: UIColor
     let textColor: UIColor
     
@@ -57,6 +58,7 @@ class SourceViewModel: ViewModel {
         self.apiClient = apiClient
         self.source = source
         self.name = name
+        self.logoURL = source.logoURL
         self.backgroundColor = backgroundColor
         self.textColor = backgroundColor.contrastingTextColor
         
