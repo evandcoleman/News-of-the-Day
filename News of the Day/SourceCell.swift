@@ -86,7 +86,7 @@ class SourceCell: UICollectionViewCell, Reusable {
         sortControl.m_top |=| imageView.m_bottom + vInterMargin
         sortControl |=| self.contentView.m_centerX
         
-        tableView.m_top |=| sortControl.m_bottom + vInterMargin
+        let tableViewTopConstraint = tableView.m_top |=| sortControl.m_bottom + vInterMargin
         tableView |=| self.contentView.m_sides ~ (hMargin, hMargin)
         tableView |=| self.contentView.m_bottom - vMargin
         
@@ -112,10 +112,15 @@ class SourceCell: UICollectionViewCell, Reusable {
         
         self.viewModel.producer
             .skipNil()
-            .flatMap(.latest) { $0.isRevealed.producer }
-            .startWithValues { isRevealed in
-                sortControl.isHidden = !isRevealed
+            .flatMap(.latest) { SignalProducer.combineLatest($0.isRevealed.producer, SignalProducer<Bool, NoError>(value: $0.showsSortOrders)) }
+            .startWithValues { [weak self] isRevealed, showsSortOrders in
+                sortControl.isHidden = !isRevealed || !showsSortOrders
                 tableView.isHidden = !isRevealed
+                tableViewTopConstraint.layoutConstraints
+                    .forEach { $0.constant = showsSortOrders ? vInterMargin : -sortControl.bounds.height }
+                
+                self?.contentView.setNeedsLayout()
+                self?.contentView.layoutIfNeeded()
             }
         
         self.viewModel.producer
@@ -147,11 +152,14 @@ class SourceCell: UICollectionViewCell, Reusable {
             }
         
         self.headHeight.producer
-            .startWithValues { headHeight in
+            .startWithValues { [weak self] headHeight in
                 imageViewBottomConstraint.layoutConstraints
                     .forEach { $0.constant = headHeight - vMargin }
                 imageViewHeightConstraint.layoutConstraints
                     .forEach { $0.constant = max(headHeight - (vMargin * 2), 0) }
+                
+                self?.contentView.setNeedsLayout()
+                self?.contentView.layoutIfNeeded()
             }
         
         self.viewModel.producer
