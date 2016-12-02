@@ -12,7 +12,6 @@ PODS:
     - Result (~> 3.0)
   - Result (3.0.0)
   - Then (2.1.0)
-  - UIImageColors (1.2.1)
 
 DEPENDENCIES:
   - Alamofire
@@ -25,7 +24,6 @@ DEPENDENCIES:
   - ReactiveCocoa (= 5.0.0-alpha.3)
   - ReactiveSwift (= 1.0.0-alpha.3)
   - Then
-  - UIImageColors
 
 SPEC CHECKSUMS:
   Alamofire: 7682d43245de14874acd142ec137b144aa1dd335
@@ -39,8 +37,7 @@ SPEC CHECKSUMS:
   ReactiveSwift: d67b677f9574ba614d94022a88fcf456e77fa515
   Result: 1b3e431f37cbcd3ad89c6aa9ab0ae55515fae3b6
   Then: 8496793c8fcac95482b943909b440724c7d8d82c
-  UIImageColors: 4daac49e88772d37d3f5a02b7abec9f85346497c
 
-PODFILE CHECKSUM: b31ced608446430999337511870946b929a76a12
+PODFILE CHECKSUM: 9dc3c5b244af1c5a332a83b2202ad9857b811702
 
 COCOAPODS: 1.1.1

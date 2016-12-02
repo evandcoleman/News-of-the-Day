@@ -13,5 +13,4 @@ target 'News of the Day' do
   pod 'ReactiveCocoa', '5.0.0-alpha.3'
   pod 'ReactiveSwift', '1.0.0-alpha.3'
   pod 'Then'
-  pod 'UIImageColors'
 end

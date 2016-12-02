@@ -32,7 +32,6 @@
 		200B581B1DEE5A6200E82F0F /* Signal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200B58191DEE5A6200E82F0F /* Signal.swift */; };
 		200B581C1DEE5A6200E82F0F /* SignalProducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200B581A1DEE5A6200E82F0F /* SignalProducer.swift */; };
 		200B58201DEE627000E82F0F /* Kingfisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200B581F1DEE627000E82F0F /* Kingfisher.swift */; };
-		200B58221DEE642800E82F0F /* UIImageColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200B58211DEE642800E82F0F /* UIImageColors.swift */; };
 		20387F551DEF71E8009C0387 /* ArticleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20387F541DEF71E8009C0387 /* ArticleViewModel.swift */; };
 		20387F591DEF783D009C0387 /* ArticleCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20387F581DEF783D009C0387 /* ArticleCell.swift */; };
 		20387F5B1DEF7E7A009C0387 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20387F5A1DEF7E7A009C0387 /* Date.swift */; };
@@ -71,7 +70,6 @@
 		200B58191DEE5A6200E82F0F /* Signal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal.swift; sourceTree = "<group>"; };
 		200B581A1DEE5A6200E82F0F /* SignalProducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignalProducer.swift; sourceTree = "<group>"; };
 		200B581F1DEE627000E82F0F /* Kingfisher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Kingfisher.swift; sourceTree = "<group>"; };
-		200B58211DEE642800E82F0F /* UIImageColors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIImageColors.swift; sourceTree = "<group>"; };
 		20387F541DEF71E8009C0387 /* ArticleViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArticleViewModel.swift; sourceTree = "<group>"; };
 		20387F581DEF783D009C0387 /* ArticleCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArticleCell.swift; sourceTree = "<group>"; };
 		20387F5A1DEF7E7A009C0387 /* Date.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Date.swift; sourceTree = "<group>"; };
@@ -161,7 +159,6 @@
 				200B58191DEE5A6200E82F0F /* Signal.swift */,
 				200B581A1DEE5A6200E82F0F /* SignalProducer.swift */,
 				200B581F1DEE627000E82F0F /* Kingfisher.swift */,
-				200B58211DEE642800E82F0F /* UIImageColors.swift */,
 				207112181DEF552000B36847 /* UIView.swift */,
 				2071121A1DEF58E400B36847 /* UIColor.swift */,
 				20387F5A1DEF7E7A009C0387 /* Date.swift */,
@@ -366,7 +363,6 @@
 				200B58201DEE627000E82F0F /* Kingfisher.swift in Sources */,
 				2071121B1DEF58E400B36847 /* UIColor.swift in Sources */,
 				200B580F1DEE510900E82F0F /* NSError.swift in Sources */,
-				200B58221DEE642800E82F0F /* UIImageColors.swift in Sources */,
 				200B57FB1DEE3C0F00E82F0F /* ViewModel.swift in Sources */,
 				200B57F51DEE3BDD00E82F0F /* Article.swift in Sources */,
 				200B58031DEE401600E82F0F /* SourcesResponse.swift in Sources */,
