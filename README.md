@@ -14,4 +14,4 @@
 
 ## Screenshots
 
-![](screenshots/main.png) ![](screenshots/source.png)
+![](screenshots/main-screen.png) ![](screenshots/source-screen.png)
