@@ -7,15 +7,22 @@ import Foundation
 import ReactiveSwift
 import enum Result.NoError
 
-class BackgroundViewModel: ViewModel {
+class HeaderViewModel: ViewModel {
     // MARK: Public Properties
 
     let title = MutableProperty<String>("News")
-    let isLoading = MutableProperty<Bool>(false)
-    let showAttribution = MutableProperty<Bool>(false)
+    let isSearching = MutableProperty<Bool>(false)
+    let (searchText, searchSink) = Signal<String?, NoError>.pipe()
 
     // MARK: Public Actions
 
+    lazy var search: Action<(), Bool, NoError> = {
+        return Action { [weak self] _ in
+            guard let `self` = self else { return .empty }
+            
+            return SignalProducer(value: !self.isSearching.value)
+        }
+    }()
 
     // MARK: Private Properties
 
@@ -28,5 +35,9 @@ class BackgroundViewModel: ViewModel {
 
     init(filter: Action<(), [Category], NoError>) {
         self.filter = filter
+        
+        super.init()
+        
+        self.isSearching <~ self.search.values
     }
 }

@@ -12,7 +12,11 @@ class SourcesViewModel: ViewModel {
     // MARK: Public Properties
     
     let sources = MutableProperty<[SourceViewModel]>([])
-    let backgroundViewModel: BackgroundViewModel
+    let isSourceRevealed = MutableProperty<Bool>(false)
+    let isAttributionHidden = MutableProperty<Bool>(true)
+    let isLoading = MutableProperty<Bool>(false)
+    let emptyStateText = MutableProperty<String?>(nil)
+    let headerViewModel: HeaderViewModel
     
     // MARK: Private Properties
     
@@ -72,36 +76,62 @@ class SourcesViewModel: ViewModel {
     
     init(apiClient: APIClient) {
         self.apiClient = apiClient
-        self.backgroundViewModel = BackgroundViewModel(filter: self.filter)
+        self.headerViewModel = HeaderViewModel(filter: self.filter)
         
         super.init()
         
+        let sourceViewModels = SignalProducer(signal: self.loadSources.values)
+            .map { [weak self] sources -> [SourceViewModel] in
+                guard let `self` = self else { return [] }
+                
+                let blue = UIColor(hex: 0x5096da)
+                let red = UIColor(hex: 0xf75635)
+                let yellow = UIColor(hex: 0xfea618)
+                let green = UIColor(hex: 0x48ca2f)
+                let purple = UIColor(hex: 0x5d29a5)
+                let lightBlue = UIColor(hex: 0x7dc6e5)
+                let subColors = [blue, red, yellow, lightBlue, green, purple]
+                let repeatCount = Int(ceil(Double(sources.count) / Double(subColors.count)))
+                let colors = [[UIColor]](repeating: subColors, count: repeatCount)
+                    .flatMap { $0 }
+                
+                return zip(sources, colors[0..<sources.count])
+                    .flatMap { SourceViewModel($0, backgroundColor: $1, apiClient: apiClient, openArticle: self.openURL) }
+            }
+        
+        let categoryProducer = self.category.producer
+        let searchTextProducer = SignalProducer.merge(
+            SignalProducer<String?, NoError>(value: nil),
+            SignalProducer(signal: self.headerViewModel.searchText)
+        )
         self.sources <~
-            SignalProducer.combineLatest(self.category.producer, SignalProducer(signal: self.loadSources.values))
-                .map { [weak self] category, sources in
-                    guard let `self` = self else { return [] }
+            SignalProducer.combineLatest(categoryProducer, searchTextProducer, sourceViewModels)
+                .map { category, searchText, sources in
+                    var filteredSources = category == .all ? sources : sources.filter { $0.category == category }
                     
-                    let filteredSources = category == .all ? sources : sources.filter { $0.category == category }
+                    if let text = searchText {
+                        if text.characters.count > 0 {
+                            filteredSources = filteredSources.filter { $0.name.contains(text) }
+                        }
+                    }
                     
-                    let blue = UIColor(hex: 0x5096da)
-                    let red = UIColor(hex: 0xf75635)
-                    let yellow = UIColor(hex: 0xfea618)
-                    let green = UIColor(hex: 0x48ca2f)
-                    let purple = UIColor(hex: 0x5d29a5)
-                    let lightBlue = UIColor(hex: 0x7dc6e5)
-                    let subColors = [blue, red, yellow, lightBlue, green, purple]
-                    let repeatCount = Int(ceil(Double(filteredSources.count) / Double(subColors.count)))
-                    let colors = [[UIColor]](repeating: subColors, count: repeatCount)
-                        .flatMap { $0 }
-                                        
-                    return zip(filteredSources, colors[0..<filteredSources.count])
-                        .flatMap { SourceViewModel($0, backgroundColor: $1, apiClient: apiClient, openArticle: self.openURL) }
+                    return filteredSources
                 }
+                .observe(on: UIScheduler())
         
         self.category <~ self.setCategory.values
+        self.isLoading <~ self.loadSources.isExecuting
         
-        self.backgroundViewModel.isLoading <~ self.loadSources.isExecuting
-        self.backgroundViewModel.title <~
+        self.isAttributionHidden <~
+            SignalProducer.combineLatest(self.isSourceRevealed.producer, self.sources.producer)
+                .map { $0 || $1.count == 0 }
+        
+        self.emptyStateText <~
+            SignalProducer.combineLatest(searchTextProducer, self.sources.producer)
+                .map { ($0?.characters.count ?? 0) > 0 && $1.count == 0 ? "No Publications Found :(" : nil }
+                .observe(on: UIScheduler())
+        
+        self.headerViewModel.title <~
             self.category.producer
                 .map { return $0 == .all ? "News" : $0.title }
         

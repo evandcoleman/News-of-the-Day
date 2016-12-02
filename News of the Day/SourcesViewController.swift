@@ -12,23 +12,10 @@ import SafariServices
 import Then
 import UIKit
 
-class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardCollectionViewLayoutDelegate {
-    private let layout: HFCardCollectionViewLayout
+class SourcesViewController: ViewController<SourcesViewModel>, UICollectionViewDataSource, HFCardCollectionViewLayoutDelegate {
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
-    }
-    
-    init(viewModel: SourcesViewModel) {
-        self.layout = HFCardCollectionViewLayout().then {
-            $0.spaceAtTopForBackgroundView = 44
-        }
-    
-        super.init(viewModel: viewModel, layout: self.layout)
-    }
-    
-    required public init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
     
     override func viewDidLoad() {
@@ -36,26 +23,76 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
         
         // MARK: Configure Subviews
         
-        let backgroundView = BackgroundView(viewModel: self.viewModel.backgroundViewModel)
+        let headerView = HeaderView(viewModel: self.viewModel.headerViewModel)
         
-        self.collectionView?.do {
-            $0.register(SourceCell.self, forCellWithReuseIdentifier: SourceCell.reuseIdentifier)
-            $0.backgroundView = backgroundView
+        let attributionLabel = UILabel().then {
+            $0.text = "Powered by News API\nnewsapi.org"
+            $0.numberOfLines = 2
+            $0.textAlignment = .center
+            $0.textColor = .white
+            $0.font = UIFont.systemFont(ofSize: 10)
+            $0.reactive.isHidden <~ self.viewModel.isAttributionHidden
         }
+        
+        let emptyStateLabel = UILabel().then {
+            $0.numberOfLines = 0
+            $0.textAlignment = .center
+            $0.textColor = .white
+            $0.font = UIFont.systemFont(ofSize: 16)
+            $0.reactive.text <~ self.viewModel.emptyStateText
+        }
+        
+        let activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .whiteLarge).then {
+            $0.hidesWhenStopped = true
+            $0.reactive.isAnimating <~ self.viewModel.isLoading
+        }
+        
+        let layout = HFCardCollectionViewLayout()
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout).then {
+            $0.register(SourceCell.self, forCellWithReuseIdentifier: SourceCell.reuseIdentifier)
+            $0.delegate = self
+            $0.dataSource = self
+            $0.backgroundColor = .clear
+        }
+        
+        // MARK: Add Subviews
+        
+        self.view.addSubview(headerView)
+        self.view.addSubview(attributionLabel)
+        self.view.addSubview(activityIndicator)
+        self.view.addSubview(emptyStateLabel)
+        self.view.addSubview(collectionView)
+        
+        // MARK: Layout
+        
+        let vAttributionTopMargin: CGFloat = 8
+        
+        headerView.m_top |=| self.m_topLayoutGuideBottom
+        headerView |=| self.view.m_sides
+        
+        attributionLabel |=| self.view.m_sides
+        attributionLabel.m_top |=| headerView.m_bottom + vAttributionTopMargin
+        
+        activityIndicator |=| self.view.m_center
+        
+        emptyStateLabel |=| self.view.m_center
+        
+        collectionView.m_top |=| headerView.m_bottom
+        collectionView |=| self.view.m_sides
+        collectionView |=| self.view.m_bottom
         
         // MARK: Logic/Bindings
         
         self.viewModel.sources.producer
-            .observe(on: UIScheduler())
-            .startWithValues { [weak self] _ in
-                self?.collectionView?.reloadData()
+            .startWithValues { _ in
+                collectionView.reloadData()
             }
         
         self.viewModel.openSource.values
-            .observeValues { [weak self] idx in
-                guard let `self` = self else { return }
+            .observeValues { idx in
+                headerView.resignFirstResponder()
                 
-                self.layout.revealCardAt(index: idx)
+                layout.revealCardAt(index: idx)
             }
         
         self.viewModel.openURL.values
@@ -81,7 +118,7 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
     
     // MARK: HFCardCollectionViewLayoutDelegate
     
-    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {        
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         self.viewModel.openSource.apply(indexPath.row).start()
     }
     
@@ -89,7 +126,8 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
         let viewModel = self.viewModel.sources.value[index]
         
         viewModel.isRevealed.value = true
-        self.viewModel.backgroundViewModel.showAttribution.value = false
+        
+        self.viewModel.isSourceRevealed.value = true
     }
     
     func cardCollectionViewLayout(_ collectionViewLayout: HFCardCollectionViewLayout, willUnrevealCardAtIndex index: Int) {
@@ -99,20 +137,22 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
     }
     
     func cardCollectionViewLayout(_ collectionViewLayout: HFCardCollectionViewLayout, didUnrevealCardAtIndex index: Int) {
-        self.viewModel.backgroundViewModel.showAttribution.value = true
+        self.viewModel.isSourceRevealed.value = false
     }
     
     // MARK: UICollectionViewDataSource
     
-    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return self.viewModel.sources.value.count
     }
     
-    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SourceCell.reuseIdentifier, for: indexPath) as! SourceCell
         
         cell.viewModel.value = self.viewModel.sources.value[indexPath.item]
-        cell.headHeight.value = self.layout.cardHeadHeight
+        if let layout = collectionView.collectionViewLayout as? HFCardCollectionViewLayout {
+            cell.headHeight.value = layout.cardHeadHeight
+        }
         
         return cell
     }
