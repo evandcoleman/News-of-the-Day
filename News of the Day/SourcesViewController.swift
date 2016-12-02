@@ -86,8 +86,13 @@ class SourcesViewController: ViewController<SourcesViewModel>, UICollectionViewD
         // MARK: Logic/Bindings
         
         self.viewModel.sources.producer
-            .startWithValues { _ in
+            .startWithValues { sources in
                 collectionView.reloadData()
+                
+                // If there's only one source, reveal it immediately
+                if sources.count == 1 {
+                    layout.revealCardAt(index: 0)
+                }
             }
         
         self.viewModel.openSource.values
@@ -95,6 +100,12 @@ class SourcesViewController: ViewController<SourcesViewModel>, UICollectionViewD
                 headerView.resignFirstResponder()
                 
                 layout.revealCardAt(index: idx)
+            }
+        
+        self.viewModel.headerViewModel.isSearching.producer
+            .filter { $0 }
+            .startWithValues { _ in
+                layout.unrevealCard()
             }
         
         self.viewModel.openURL.values
@@ -107,6 +118,9 @@ class SourcesViewController: ViewController<SourcesViewModel>, UICollectionViewD
         self.viewModel.filter.values
             .observeValues { [weak self] categories in
                 guard let `self` = self else { return }
+                
+                layout.unrevealCard()
+                
                 let alertController = UIAlertController(title: "Filter", message: "Select a category to filter news sources by.", preferredStyle: .actionSheet)
                 let action = self.viewModel.setCategory
                 
