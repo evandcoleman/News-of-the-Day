@@ -66,12 +66,6 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
             }
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-        self.viewModel.refreshSources.apply().start()
-    }
-    
     // MARK: HFCardCollectionViewLayoutDelegate
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {        

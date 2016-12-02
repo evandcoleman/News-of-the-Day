@@ -84,5 +84,8 @@ class SourcesViewModel: ViewModel {
                 }
         
         self.loadSources.errors.observe(self.errorSink)
+        
+        // Kick off first fetch
+        self.refreshSources.apply().start()
     }
 }
