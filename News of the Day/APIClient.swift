@@ -11,6 +11,8 @@ import Then
 class APIClient {
     private static let supportedCountryCodes = ["au", "de", "gb", "in", "it", "us"]
     private static let supportedLanguageCodes = ["en", "de", "fr"]
+    private static let defaultCountryCode = "us"
+    private static let defaultLanguageCode = "en"
     
     private let session: SessionManager
     
@@ -24,8 +26,11 @@ class APIClient {
     }
     
     func readSources(category: Category? = nil) -> SignalProducer<[Source], NSError> {
-        let language = NSLocale.current.languageCode
-        let country = NSLocale.current.regionCode
+        let deviceLanguage = NSLocale.current.languageCode?.lowercased() ?? APIClient.defaultLanguageCode
+        let deviceCountry = NSLocale.current.regionCode?.lowercased() ?? APIClient.defaultCountryCode
+        
+        let language = APIClient.supportedLanguageCodes.contains(deviceLanguage) ? deviceLanguage : APIClient.defaultLanguageCode
+        let country = APIClient.supportedCountryCodes.contains(deviceCountry) ? deviceCountry : APIClient.defaultCountryCode
         
         return self.session
             .request(Router.sources(category: category, language: language, country: country))

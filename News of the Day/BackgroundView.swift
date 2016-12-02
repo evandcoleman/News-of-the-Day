@@ -20,6 +20,8 @@ class BackgroundView: UIView {
         
         // MARK: Configure Subviews
         
+        self.backgroundColor = .black
+        
         let container = UIView()
         
         let iconLabel = UILabel().then {
