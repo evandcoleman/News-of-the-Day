@@ -100,6 +100,7 @@ class SourcesViewModel: ViewModel {
         
         self.category <~ self.setCategory.values
         
+        self.backgroundViewModel.isLoading <~ self.loadSources.isExecuting
         self.backgroundViewModel.title <~
             self.category.producer
                 .map { return $0 == .all ? "News" : $0.title }

@@ -34,10 +34,24 @@ class BackgroundView: UIView {
             $0.reactive.text <~ viewModel.title
         }
         
+        let attributionLabel = UILabel().then {
+            $0.text = "Powered by News API\nnewsapi.org"
+            $0.numberOfLines = 2
+            $0.textAlignment = .center
+            $0.textColor = .white
+            $0.font = UIFont.systemFont(ofSize: 10)
+            $0.reactive.isHidden <~ viewModel.showAttribution.map { !$0 }
+        }
+        
         let filterButton = UIButton(type: .custom).then {
             $0.setFAIcon(icon: .FAFilter, iconSize: 24, forState: .normal)
             $0.setFATitleColor(color: .white)
             $0.reactive.pressed = CocoaAction<UIButton>(viewModel.filter)
+        }
+        
+        let activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .whiteLarge).then {
+            $0.hidesWhenStopped = true
+            $0.reactive.isAnimating <~ viewModel.isLoading
         }
         
         // MARK: Add Subviews
@@ -45,6 +59,8 @@ class BackgroundView: UIView {
         container.addSubview(iconLabel)
         container.addSubview(textLabel)
         container.addSubview(filterButton)
+        container.addSubview(attributionLabel)
+        container.addSubview(activityIndicator)
         self.addSubview(container)
         
         // MARK: Layout
@@ -52,6 +68,7 @@ class BackgroundView: UIView {
         let vMargin: CGFloat = 8
         let hMargin: CGFloat = 8
         let hInterLabelMargin: CGFloat = 8
+        let vAttributionTopMargin: CGFloat = 16
         
         container |=| self.m_edges ~ (UIApplication.shared.statusBarFrame.height + vMargin, 0, 0, 0)
         
@@ -63,6 +80,11 @@ class BackgroundView: UIView {
         
         filterButton |=| iconLabel.m_centerY
         filterButton |=| container.m_trailing - hMargin
+        
+        attributionLabel |=| container.m_sides
+        attributionLabel.m_top |=| iconLabel.m_bottom + vAttributionTopMargin
+        
+        activityIndicator |=| container.m_center
     }
     
     required init?(coder aDecoder: NSCoder) {

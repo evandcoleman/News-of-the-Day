@@ -11,6 +11,8 @@ class BackgroundViewModel: ViewModel {
     // MARK: Public Properties
 
     let title = MutableProperty<String>("News")
+    let isLoading = MutableProperty<Bool>(false)
+    let showAttribution = MutableProperty<Bool>(false)
 
     // MARK: Public Actions
 

@@ -89,12 +89,17 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
         let viewModel = self.viewModel.sources.value[index]
         
         viewModel.isRevealed.value = true
+        self.viewModel.backgroundViewModel.showAttribution.value = false
     }
     
     func cardCollectionViewLayout(_ collectionViewLayout: HFCardCollectionViewLayout, willUnrevealCardAtIndex index: Int) {
         let viewModel = self.viewModel.sources.value[index]
         
         viewModel.isRevealed.value = false
+    }
+    
+    func cardCollectionViewLayout(_ collectionViewLayout: HFCardCollectionViewLayout, didUnrevealCardAtIndex index: Int) {
+        self.viewModel.backgroundViewModel.showAttribution.value = true
     }
     
     // MARK: UICollectionViewDataSource
