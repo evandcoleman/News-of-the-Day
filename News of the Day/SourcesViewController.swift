@@ -23,6 +23,8 @@ class SourcesViewController: ViewController<SourcesViewModel>, UICollectionViewD
         
         // MARK: Configure Subviews
         
+        self.view.backgroundColor = .black
+        
         let headerView = HeaderView(viewModel: self.viewModel.headerViewModel)
         
         let attributionLabel = UILabel().then {
