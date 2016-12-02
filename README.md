@@ -6,8 +6,8 @@
 
 1. Install CocoaPods
 
-    $ gem install cocoapods
+        $ gem install cocoapods
 
 2. Install Dependencies
 
-      $ pod install
+        $ pod install
