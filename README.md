@@ -10,4 +10,4 @@
 
 2. Install Dependencies
 
-    $ pod install
+      $ pod install
