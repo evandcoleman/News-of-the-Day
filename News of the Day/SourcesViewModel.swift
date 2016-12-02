@@ -12,10 +12,12 @@ class SourcesViewModel: ViewModel {
     // MARK: Public Properties
     
     let sources = MutableProperty<[SourceViewModel]>([])
+    let backgroundViewModel: BackgroundViewModel
     
     // MARK: Private Properties
     
     private let apiClient: APIClient
+    private let category = MutableProperty<Category>(.all)
     
     // MARK: Public Actions
     
@@ -26,6 +28,12 @@ class SourcesViewModel: ViewModel {
             return self.loadSources.apply()
                 .ignoreError()
                 .map { _ in () }
+        }
+    }()
+    
+    lazy var setCategory: Action<Category, Category, NoError> = {
+        return Action { category in
+            SignalProducer(value: category)
         }
     }()
     
@@ -56,17 +64,24 @@ class SourcesViewModel: ViewModel {
         }
     }()
     
+    let filter = Action<(), [Category], NoError> { _ in
+        return SignalProducer(value: Category.filterable)
+    }
+    
     // MARK: Methods
     
     init(apiClient: APIClient) {
         self.apiClient = apiClient
+        self.backgroundViewModel = BackgroundViewModel(filter: self.filter)
         
         super.init()
         
         self.sources <~
-            self.loadSources.values
-                .map { [weak self] sources in
+            SignalProducer.combineLatest(self.category.producer, SignalProducer(signal: self.loadSources.values))
+                .map { [weak self] category, sources in
                     guard let `self` = self else { return [] }
+                    
+                    let filteredSources = category == .all ? sources : sources.filter { $0.category == category }
                     
                     let blue = UIColor(hex: 0x5096da)
                     let red = UIColor(hex: 0xf75635)
@@ -75,13 +90,19 @@ class SourcesViewModel: ViewModel {
                     let purple = UIColor(hex: 0x5d29a5)
                     let lightBlue = UIColor(hex: 0x7dc6e5)
                     let subColors = [blue, red, yellow, lightBlue, green, purple]
-                    let repeatCount = Int(ceil(Double(sources.count) / Double(subColors.count)))
+                    let repeatCount = Int(ceil(Double(filteredSources.count) / Double(subColors.count)))
                     let colors = [[UIColor]](repeating: subColors, count: repeatCount)
                         .flatMap { $0 }
                                         
-                    return zip(sources, colors[0..<sources.count])
+                    return zip(filteredSources, colors[0..<filteredSources.count])
                         .flatMap { SourceViewModel($0, backgroundColor: $1, apiClient: apiClient, openArticle: self.openURL) }
                 }
+        
+        self.category <~ self.setCategory.values
+        
+        self.backgroundViewModel.title <~
+            self.category.producer
+                .map { return $0 == .all ? "News" : $0.title }
         
         self.loadSources.errors.observe(self.errorSink)
         

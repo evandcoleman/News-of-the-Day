@@ -5,18 +5,22 @@
 
 import Font_Awesome_Swift
 import Mortar
+import ReactiveCocoa
+import ReactiveSwift
 import Then
 import UIKit
 
 class BackgroundView: UIView {
+    let viewModel: BackgroundViewModel
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    init(viewModel: BackgroundViewModel) {
+        self.viewModel = viewModel
+        
+        super.init(frame: .zero)
         
         // MARK: Configure Subviews
         
         let container = UIView()
-        let textContainer = UIView()
         
         let iconLabel = UILabel().then {
             $0.textColor = .white
@@ -27,13 +31,20 @@ class BackgroundView: UIView {
             $0.textColor = .white
             $0.font = UIFont.systemFont(ofSize: 17)
             $0.text = "News"
+            $0.reactive.text <~ viewModel.title
+        }
+        
+        let filterButton = UIButton(type: .custom).then {
+            $0.setFAIcon(icon: .FAFilter, iconSize: 24, forState: .normal)
+            $0.setFATitleColor(color: .white)
+            $0.reactive.pressed = CocoaAction<UIButton>(viewModel.filter)
         }
         
         // MARK: Add Subviews
         
-        textContainer.addSubview(iconLabel)
-        textContainer.addSubview(textLabel)
-        container.addSubview(textContainer)
+        container.addSubview(iconLabel)
+        container.addSubview(textLabel)
+        container.addSubview(filterButton)
         self.addSubview(container)
         
         // MARK: Layout
@@ -44,13 +55,14 @@ class BackgroundView: UIView {
         
         container |=| self.m_edges ~ (UIApplication.shared.statusBarFrame.height + vMargin, 0, 0, 0)
         
-        textContainer |=| container
-        
-        iconLabel |=| textContainer.m_top
-        iconLabel |=| textContainer.m_leading + hMargin
+        iconLabel |=| container.m_top
+        iconLabel |=| container.m_leading + hMargin
         
         textLabel |=| iconLabel.m_centerY
         textLabel.m_leading |=| iconLabel.m_trailing + hInterLabelMargin
+        
+        filterButton |=| iconLabel.m_centerY
+        filterButton |=| container.m_trailing - hMargin
     }
     
     required init?(coder aDecoder: NSCoder) {

@@ -36,7 +36,7 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
         
         // MARK: Configure Subviews
         
-        let backgroundView = BackgroundView()
+        let backgroundView = BackgroundView(viewModel: self.viewModel.backgroundViewModel)
         
         self.collectionView?.do {
             $0.register(SourceCell.self, forCellWithReuseIdentifier: SourceCell.reuseIdentifier)
@@ -63,6 +63,19 @@ class SourcesViewController: CollectionViewController<SourcesViewModel>, HFCardC
                 let viewController = SFSafariViewController(url: url, entersReaderIfAvailable: true)
                 
                 self?.present(viewController, animated: true, completion: nil)
+            }
+        
+        self.viewModel.filter.values
+            .observeValues { [weak self] categories in
+                guard let `self` = self else { return }
+                let alertController = UIAlertController(title: "Filter", message: "Select a category to filter news sources by.", preferredStyle: .actionSheet)
+                let action = self.viewModel.setCategory
+                
+                categories.forEach {
+                    alertController.reactive.addAction(withTitle: $0.title, style: .default, action: CocoaAction<UIAlertAction>(action, input: $0))
+                }
+                
+                self.present(alertController, animated: true, completion: nil)
             }
     }
     

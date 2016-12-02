@@ -163,8 +163,9 @@ class SourceCell: UICollectionViewCell, Reusable {
             }
         
         self.viewModel.producer
-            .skipNil()
-            .flatMap(.latest) { $0.articles.producer }
+            .flatMap(.latest) { viewModel -> SignalProducer<[ArticleViewModel], NoError> in
+                return viewModel?.articles.producer ?? SignalProducer(value: [])
+            }
             .observe(on: UIScheduler())
             .startWithValues { _ in
                 tableView.reloadData()
@@ -172,8 +173,7 @@ class SourceCell: UICollectionViewCell, Reusable {
         
         self.reactive.prepareForReuse
             .observeValues { [weak self] _ in
-                self?.backgroundColor = nil
-                nameLabel.text = nil
+                self?.viewModel.value = nil
             }
     }
 
