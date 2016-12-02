@@ -125,12 +125,12 @@ class HeaderView: UIView {
                     iconLabel.isHidden = false
                     textLabel.isHidden = false
                     
-                    UIView.animate(withDuration: 0.36) {
+                    UIView.animate(withDuration: 0.36, animations: {
                         iconLabel.transform = .identity
                         textLabel.transform = .identity
                         searchButton.transform = .identity
                         self.searchField.transform = .identity
-                    }
+                    }) { _ in self.searchField.text = nil }
                 }
             }
     }

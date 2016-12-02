@@ -39,5 +39,11 @@ class HeaderViewModel: ViewModel {
         super.init()
         
         self.isSearching <~ self.search.values
+        
+        self.isSearching.producer
+            .filter { !$0 }
+            .startWithValues { [weak self] _ in
+                self?.searchSink.send(value: nil)
+            }
     }
 }

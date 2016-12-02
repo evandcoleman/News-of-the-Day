@@ -80,6 +80,7 @@ class SourcesViewModel: ViewModel {
         
         super.init()
         
+        // Create the view models first for performance
         let sourceViewModels = SignalProducer(signal: self.loadSources.values)
             .map { [weak self] sources -> [SourceViewModel] in
                 guard let `self` = self else { return [] }
@@ -99,6 +100,7 @@ class SourcesViewModel: ViewModel {
                     .flatMap { SourceViewModel($0, backgroundColor: $1, apiClient: apiClient, openArticle: self.openURL) }
             }
         
+        // Filter sources based on selected category and search text
         let categoryProducer = self.category.producer
         let searchTextProducer = SignalProducer.merge(
             SignalProducer<String?, NoError>(value: nil),
